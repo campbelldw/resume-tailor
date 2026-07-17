@@ -270,6 +270,60 @@ remote hybrid onsite full quality reliable efficient
 engineers engineer expert experts ready feature features management stakeholders
 over enables enable furnish speedy delightful producing produce functional
 through improve improves improved improving drive driving driven ideal must performance
+responsibilities responsibility required qualifications qualification preferred
+knowledge degree bachelor bachelors diploma equivalent
+above again against although always any anyone anything around away back
+before being below between both bring brings came cannot come comes coming
+down during either else even ever every everything final find first five
+followed following follow four further get gets getting give given gives goes
+going good got had hadn has hasn have haven having he her here hers herself
+him himself his how however if inside instead into involve involved involves
+involving item items just keep keeps kept know known last late later least
+less let lets like likely little long look looks lot made make makes making
+many may maybe me mean means might mine more most much must my myself near
+need needed needs neither never next no none nor not nothing now of off often
+once one ones only onto open or other others otherwise ought our ours
+ourselves out outside over own past per perhaps place plus point points
+possible put puts quite rather really right said same saw say says second see
+seem seemed seems seen set sets shall she should shouldn show shown side
+since six small so some someone something sometimes soon still such sure take
+taken takes taking tell ten than that the their theirs them themselves then
+there therefore these they thing things think third this those three thus
+time times to today together too took toward two under unless until up upon
+us usually very want wants was way ways we well went were what whatever when
+where whether which while who whole whom whose why wide will willing wish
+with within without would wouldn yes yet you your yours yourself
+january february march april may june july august september october november
+december annually daily weekly monthly quarterly yearly current currently
+future ongoing
+accommodation accommodations applicant applicants apply applying asset assets
+background base bonus business career careers client clients colleague
+colleagues committed communication communications company companies
+compensation competitive contract culture customer customers dental depending
+description desirable disability diverse diversity dynamic email employee
+employees employer employment equal equity excellent exciting familiarity
+fast flexible fun gender growing growth health hire hiring holiday holidays
+hour hours hourly individual individuals industry information insurance
+interview interviews job jobs join joining language level levels location
+locations manager managers member mission motivated nice offer offers office
+opportunities opportunity organization organizational organizations
+orientation paid passion passionate pay pension people perks person personal
+please policy position positions posting qualified race range receive
+recruiter recruitment referral religion resume salary schedule sex sexual
+skill skills start status submit successful suitable talented thank title
+training travel type vacation valid variety veteran wage welcome wellness
+workplace world
+achieve achieved achieving adapt add address adhere align aligned analyze
+approach assess assist assisting attend collaborate collaborating
+collaboration communicate communicating complete conduct conducting consider
+contribute contributing coordinate coordinating define defining deliverables
+demonstrate demonstrated describe discuss encourage engage establish evaluate
+execute expect facilitate focus focused foster gain gather help identify
+identifying impact increase influence inform interact lead leading learn
+leverage leveraging listen meet meeting meets operate organize oversee
+perform performing prepare present prioritize promote pursue recommend
+respond seek serve share solve stay succeed translate understand update
+updating utilize utilizing value win write writing written
 `.trim().split(/\s+/));
 
 const PHRASE_CANON = [
@@ -300,6 +354,7 @@ const SYN = {
   restful: "rest", reactjs: "react", github: "git", gitlab: "git",
   dockerized: "docker", containerization: "docker", containers: "docker",
   automated: "automation", automating: "automation", automate: "automation",
+  automations: "automation", orchestrations: "orchestration", workflows: "workflow",
   monitored: "monitoring", monitor: "monitoring",
   deployed: "deployment", deployments: "deployment", deploying: "deployment", deploy: "deployment",
   pipelines: "pipeline", dashboards: "dashboard", incidents: "incident",
@@ -325,13 +380,14 @@ function concepts(text) {
 
 /* Keyword extraction: repeated posting words minus filler (build.py coverage()) */
 function jdKeywords(jdText) {
-  // first line is usually "Title — Company, City": exclude those proper nouns from keywords
-  const firstLine = jdText.split("\n", 1)[0] || "";
-  const headerNoise = jdText.includes("\n") ? concepts(firstLine) : new Set();
+  // posting headers hold title/company/address/salary: exclude those proper
+  // nouns from keywords (first 3 lines), and never keyword digit-led tokens
+  const lines = jdText.split("\n").filter(l => l.trim());
+  const headerNoise = lines.length > 3 ? concepts(lines.slice(1, 3).join("\n")) : new Set();
   const freq = new Map();
   for (const raw of tokenize(canonText(jdText))) {
     const tok = canonToken(raw);
-    if (STOPWORDS.has(tok) || headerNoise.has(tok)) continue;
+    if (STOPWORDS.has(tok) || headerNoise.has(tok) || /^\d/.test(tok)) continue;
     freq.set(tok, (freq.get(tok) || 0) + 1);
   }
   const ranked = [...freq.entries()].sort((a, b) => b[1] - a[1]);
@@ -547,7 +603,8 @@ function suggestions(resumeText, jdText, covered) {
     if (!jdSurface || resTokens.has(jdSurface)) continue;
     let resSurface = null;
     for (const tok of resTokens) if (canonToken(tok) === c) { resSurface = tok; break; }
-    if (resSurface && resSurface !== jdSurface) out.push([resSurface, jdSurface]);
+    if (resSurface && resSurface !== jdSurface &&
+        resSurface + "s" !== jdSurface && jdSurface + "s" !== resSurface) out.push([resSurface, jdSurface]);
   }
   return out.slice(0, 8);
 }
