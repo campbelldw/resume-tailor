@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resume Tailor</title>
+<style>
+  :root {
+    --paper: #F5F4EF;
+    --sheet: #FFFFFF;
+    --ink: #23282D;
+    --muted: #66707A;
+    --line: #D9DAD4;
+    --hl: #FFE873;
+    --hl-ink: #3D3400;
+    --pen: #BE4A3F;
+    --pen-soft: #F6E3E0;
+    --focus: #3A6FF0;
+    --btn: #23282D;
+    --btn-ink: #F5F4EF;
+    --chip: #ECEBE4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #15181B;
+      --sheet: #1E2226;
+      --ink: #E6E4DD;
+      --muted: #99A1A9;
+      --line: #343A41;
+      --hl: #55491A;
+      --hl-ink: #F4E9AE;
+      --pen: #E0705F;
+      --pen-soft: #3A2522;
+      --focus: #6E97F2;
+      --btn: #E6E4DD;
+      --btn-ink: #1B1F23;
+      --chip: #2A2F35;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #F5F4EF; --sheet: #FFFFFF; --ink: #23282D; --muted: #66707A;
+    --line: #D9DAD4; --hl: #FFE873; --hl-ink: #3D3400; --pen: #BE4A3F;
+    --pen-soft: #F6E3E0; --focus: #3A6FF0; --btn: #23282D; --btn-ink: #F5F4EF; --chip: #ECEBE4;
+  }
+  :root[data-theme="dark"] {
+    --paper: #15181B; --sheet: #1E2226; --ink: #E6E4DD; --muted: #99A1A9;
+    --line: #343A41; --hl: #55491A; --hl-ink: #F4E9AE; --pen: #E0705F;
+    --pen-soft: #3A2522; --focus: #6E97F2; --btn: #E6E4DD; --btn-ink: #1B1F23; --chip: #2A2F35;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  header.app h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px; margin: 0; letter-spacing: 0.2px; text-wrap: balance;
+  }
+  header.app h1 mark { background: var(--hl); color: var(--hl-ink); padding: 0 4px; }
+  .tagline { color: var(--muted); margin: 6px 0 0; max-width: 62ch; }
+  .privacy { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .privacy strong { color: var(--ink); }
+
+  .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 26px; }
+  @media (max-width: 760px) { .inputs { grid-template-columns: 1fr; } }
+  .field label {
+    display: block; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; font-weight: 600;
+  }
+  textarea {
+    width: 100%; min-height: 230px; resize: vertical;
+    background: var(--sheet); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px;
+    font: 13px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  textarea:focus, button:focus-visible, .chip:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 2px;
+  }
+
+  .actions { display: flex; gap: 12px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  button.primary {
+    background: var(--btn); color: var(--btn-ink); border: none; cursor: pointer;
+    font: 600 15px/1 system-ui, sans-serif; padding: 12px 22px; border-radius: 6px;
+  }
+  button.ghost {
+    background: none; border: 1px solid var(--line); color: var(--ink); cursor: pointer;
+    font: 500 14px/1 system-ui, sans-serif; padding: 11px 16px; border-radius: 6px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    button.primary, button.ghost { transition: opacity 120ms ease; }
+  }
+  button.primary:hover, button.ghost:hover { opacity: 0.85; }
+  .hint { font-size: 13px; color: var(--muted); }
+
+  /* ---- results ---- */
+  #results { display: none; margin-top: 34px; }
+  #results.on { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 22px; align-items: start; }
+  @media (max-width: 900px) { #results.on { grid-template-columns: 1fr; } }
+
+  .sheet {
+    background: var(--sheet); border: 1px solid var(--line); border-radius: 4px;
+    padding: 44px 48px; min-height: 400px;
+    font-family: Georgia, "Times New Roman", serif; font-size: 14px; line-height: 1.45;
+  }
+  @media (max-width: 600px) { .sheet { padding: 24px 20px; } }
+  .sheet:focus { outline: 1px dashed var(--focus); outline-offset: 4px; }
+  .sheet h2.name { font-size: 26px; margin: 0 0 2px; letter-spacing: 0.3px; }
+  .sheet .contact { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .sheet h3 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--line); padding-bottom: 3px; margin: 20px 0 8px;
+  }
+  .sheet .rolehead { font-weight: 700; margin-top: 10px; }
+  .sheet .rolesub { font-size: 12px; color: var(--muted); font-style: italic; }
+  .sheet ul { margin: 4px 0 0; padding-left: 20px; }
+  .sheet li { margin-bottom: 3px; }
+  .sheet li.off { opacity: 0.35; text-decoration: line-through; }
+  .sheet p { margin: 4px 0; }
+  .sheet mark { background: var(--hl); color: var(--hl-ink); padding: 0 1px; border-radius: 2px; }
+
+  .bullet-toggle {
+    user-select: none; -webkit-user-select: none; cursor: pointer; margin-right: 6px;
+    font-family: system-ui, sans-serif; font-size: 11px; vertical-align: 1px;
+    color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px;
+  }
+
+  .rail { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .card { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; }
+  .card h4 {
+    margin: 0 0 8px; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+  }
+  .score { font-family: Georgia, serif; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .score small { font-size: 16px; color: var(--muted); }
+  .verdict { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font: 12px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    background: var(--chip); border-radius: 4px; padding: 5px 8px;
+  }
+  .chip.hit { background: var(--hl); color: var(--hl-ink); }
+  .chip.miss {
+    background: var(--pen-soft); color: var(--pen);
+    text-decoration: underline wavy var(--pen) 1px; text-underline-offset: 3px;
+  }
+  .card .note { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
+  .card .note strong { color: var(--pen); }
+  .sugg { font-size: 13.5px; margin: 6px 0; }
+  .sugg code {
+    font: 12px ui-monospace, Menlo, Consolas, monospace;
+    background: var(--chip); padding: 1px 5px; border-radius: 3px;
+  }
+  .sugg .to { color: var(--muted); padding: 0 4px; }
+
+  footer.app { margin-top: 40px; font-size: 12.5px; color: var(--muted); }
+
+  @media print {
+    body { background: #fff; }
+    .wrap > header.app, .inputs, .actions, .rail, footer.app, .hint { display: none !important; }
+    #results.on { display: block; }
+    .sheet { border: none; padding: 0; font-size: 12.5px; color: #1a1a1a; background: #fff; }
+    .sheet mark { background: none; color: inherit; padding: 0; }
+    .sheet li.off, .bullet-toggle { display: none !important; }
+    .sheet .contact, .sheet .rolesub { color: #555; }
+    .sheet h3 { border-color: #bbb; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="app">
+    <h1>Resume <mark>Tailor</mark></h1>
+    <p class="tagline">Paste your resume and the job posting. This page scores every line against
+    the posting's keywords, reorders your bullets so the strongest matches lead, highlights what
+    already lands, and red-pens what's missing — then prints a clean copy.</p>
+    <p class="privacy"><strong>Private:</strong> everything runs in your browser. Nothing you paste
+    is uploaded or stored anywhere.</p>
+  </header>
+
+  <div class="inputs">
+    <div class="field">
+      <label for="resume-in">Your resume (plain text)</label>
+      <textarea id="resume-in" spellcheck="false" placeholder="Paste your resume text here — copy it straight out of your document.
+
+Tip: keep section titles like EXPERIENCE, SKILLS, EDUCATION on their own lines."></textarea>
+    </div>
+    <div class="field">
+      <label for="jd-in">The job posting</label>
+      <textarea id="jd-in" spellcheck="false" placeholder="Paste the full job posting here — responsibilities and qualifications included."></textarea>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="go">Tailor my resume</button>
+    <button class="ghost" id="load-example">Load an example</button>
+    <span class="hint" id="status"></span>
+  </div>
+
+  <div id="results">
+    <div>
+      <div class="sheet" id="sheet" contenteditable="true" spellcheck="false" aria-label="Tailored resume — editable"></div>
+      <p class="hint" style="margin-top:10px">Click any text on the sheet to edit it. Use the “—”
+      button beside a bullet to drop it from the printed copy.</p>
+      <div class="actions">
+        <button class="primary" id="print">Print / save as PDF</button>
+        <button class="ghost" id="copy">Copy as plain text</button>
+      </div>
+    </div>
+
+    <aside class="rail">
+      <div class="card">
+        <h4>Keyword match</h4>
+        <div class="score"><span id="score-num">0</span><small>%</small></div>
+        <div class="verdict" id="score-verdict"></div>
+      </div>
+      <div class="card">
+        <h4>Already landing</h4>
+        <div class="chips" id="hits"></div>
+      </div>
+      <div class="card">
+        <h4>Missing from your resume</h4>
+        <div class="chips" id="misses"></div>
+        <p class="note"><strong>Only add what's true for you.</strong> These are words the posting
+        repeats that your resume never says — great prompts for real experience you forgot to
+        mention, never an invitation to invent any.</p>
+      </div>
+      <div class="card" id="sugg-card">
+        <h4>Wording alignments</h4>
+        <div id="suggs"></div>
+        <p class="note">Same skill, different spelling. Matching the posting's exact wording helps
+        strict keyword filters see it.</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="app">Scoring is deterministic and transparent — repeated posting keywords, minus
+  filler words, checked against your text with common synonyms unified (k8s ↔ Kubernetes,
+  CI/CD ↔ continuous integration, …). No AI, no accounts, no uploads.</footer>
+</div>
+
+<script>
+"use strict";
+
+/* ================= scoring engine — port of build.py ================= */
+
+const STOPWORDS = new Set(`
+a an and are as at be by for from has have in is it its of on or our that the to
+with you your we will our their they this these those able about across after
+all also am among any because been but can could did do does doing done each few
+more most other some such than then there what when where which who why role work
+team teams experience years year strong ability looking join help including etc
+ll ve re don doesn isn aren wasn weren youll well
+software developer developers development develop developing code coding maintain
+maintaining application applications solution solutions project projects senior
+principal staff complex high large scale part while highly responsible requirements
+members priorities execution capabilities life meetings closely product position
+candidate candidates ensure ensuring across within new modern using use used
+include including includes provide provides providing work working build builds
+building built design designs designing support supporting deliver delivering
+create creating implement implements implementing environment environments tools
+contact center intent managing manage enhance science architect scalable robust
+intuitive responsive seamless various several multiple key solid deep relevant
+related stack entire understanding opportunity roles based
+remote hybrid onsite full quality reliable efficient
+engineers engineer expert experts ready feature features management stakeholders
+over enables enable furnish speedy delightful producing produce functional
+through improve improves improved improving drive driving driven ideal must performance
+`.trim().split(/\s+/));
+
+const PHRASE_CANON = [
+  [/ci\s*\/\s*cd/g, "cicd"],
+  [/continuous integration(?:\s*\/\s*continuous (?:delivery|deployment))?/g, "cicd"],
+  [/continuous (?:delivery|deployment)/g, "cicd"],
+  [/machine learning/g, "ml"],
+  [/generative ai|gen\s*ai/g, "genai"],
+  [/large language models?|\bllms?\b/g, "llm"],
+  [/github copilot/g, "copilot"],
+  [/\.net|dotnet|c#|c\s+sharp/g, "dotnet"],
+  [/node\.?js/g, "nodejs"],
+  [/rest(?:ful)? apis?/g, "rest"],
+  [/\bk8s\b|kubernetes/g, "kubernetes"],
+  [/postgre?sql|postgres/g, "postgres"],
+  [/qt\s*qml|\bqml\b/g, "qt"],
+  [/unit test(?:s|ing)?|automated test(?:s|ing)?/g, "testing"],
+  [/infrastructure as code|\biac\b/g, "iac"],
+  [/site reliability engineering|\bsre\b/g, "sre"],
+  [/amazon web services|\baws\b/g, "aws"],
+  [/google cloud(?: platform)?|\bgcp\b/g, "gcp"],
+  [/version control|source control/g, "git"],
+];
+
+const SYN = {
+  js: "javascript", ts: "typescript", py: "python", k8s: "kubernetes",
+  postgresql: "postgres", llms: "llm", csharp: "dotnet", net: "dotnet",
+  restful: "rest", reactjs: "react", github: "git", gitlab: "git",
+  dockerized: "docker", containerization: "docker", containers: "docker",
+  automated: "automation", automating: "automation", automate: "automation",
+  monitored: "monitoring", monitor: "monitoring",
+  deployed: "deployment", deployments: "deployment", deploying: "deployment", deploy: "deployment",
+  pipelines: "pipeline", dashboards: "dashboard", incidents: "incident",
+  tested: "testing", tests: "testing", test: "testing",
+  securing: "security", secure: "security",
+};
+
+function normalize(text) {
+  return text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+function tokenize(text) {
+  return normalize(text).split(/[^a-z0-9+]+/).filter(t => t.length >= 2 && !/^\d+$/.test(t));
+}
+function canonText(text) {
+  let t = normalize(text);
+  for (const [pat, canon] of PHRASE_CANON) t = t.replace(pat, " " + canon + " ");
+  return t;
+}
+function canonToken(tok) { return Object.hasOwn(SYN, tok) ? SYN[tok] : tok; }
+function concepts(text) {
+  return new Set(tokenize(canonText(text)).map(canonToken));
+}
+
+/* Keyword extraction: repeated posting words minus filler (build.py coverage()) */
+function jdKeywords(jdText) {
+  // first line is usually "Title — Company, City": exclude those proper nouns from keywords
+  const firstLine = jdText.split("\n", 1)[0] || "";
+  const headerNoise = jdText.includes("\n") ? concepts(firstLine) : new Set();
+  const freq = new Map();
+  for (const raw of tokenize(canonText(jdText))) {
+    const tok = canonToken(raw);
+    if (STOPWORDS.has(tok) || headerNoise.has(tok)) continue;
+    freq.set(tok, (freq.get(tok) || 0) + 1);
+  }
+  const ranked = [...freq.entries()].sort((a, b) => b[1] - a[1]);
+  let kw = ranked.filter(([, n]) => n >= 2).map(([k]) => k);
+  if (kw.length < 8) kw = ranked.slice(0, 15).map(([k]) => k);
+  return { kw, freq };
+}
+
+function coverage(jdText, resConcepts) {
+  const { kw, freq } = jdKeywords(jdText);
+  const covered = kw.filter(k => resConcepts.has(k));
+  const missing = kw.filter(k => !resConcepts.has(k)).slice(0, 12);
+  const match = Math.round(100 * covered.length / Math.max(1, kw.length));
+  return { match, covered, missing, kw, freq };
+}
+
+function scoreLine(text, kwSet) {
+  let s = 0;
+  for (const tok of concepts(text)) if (kwSet.has(tok)) s += 1;
+  return s;
+}
+
+/* ================= resume text parsing ================= */
+
+const SECTION_RE = /^(professional\s+|core\s+|technical\s+|career\s+|selected\s+|relevant\s+)?(summary|profile|objective|about( me)?|(work\s+|professional\s+|employment\s+)?experience|employment( history)?|work history|education|skills?( & tools| and tools)?|technical skills|technologies|tools|competenc(y|ies)|proficienc(y|ies)|qualifications|highlights|accomplishments|achievements|projects?|personal projects|certifications?|licenses?|awards?|honors?|volunteer(ing)?( work| experience)?|languages|interests|publications|training|courses|references)\s*:?\s*$/i;
+const BULLET_RE = /^\s*[-•*–▪◦‣·>]+\s*/;
+const DATEISH_RE = /(19|20)\d{2}|present|current/i;
+
+function classifySection(name) {
+  const n = name.toLowerCase();
+  if (/experience|employment|work history/.test(n)) return "experience";
+  if (/skill|technolog/.test(n)) return "skills";
+  return "other";
+}
+
+function parseResume(text) {
+  const lines = text.split(/\r?\n/);
+  const doc = { headerLines: [], sections: [] };
+  let cur = null;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    // "Skills: PowerShell, Bash, ..." inline form — split into a skills section
+    const inlineSkills = line.match(/^(skills|technical skills|technologies)\s*:\s*(.+)$/i);
+    if (inlineSkills) {
+      cur = { title: inlineSkills[1], kind: "skills", blocks: [{ type: "text", text: inlineSkills[2].trim() }] };
+      doc.sections.push(cur);
+      continue;
+    }
+    // Section headers match known vocabulary only — an all-caps line can just as
+    // easily be an employer name ("ACME CORP"), so caps alone never start a section.
+    if (SECTION_RE.test(line)) {
+      cur = { title: line.replace(/:$/, ""), kind: classifySection(line), blocks: [] };
+      doc.sections.push(cur);
+      continue;
+    }
+    if (!cur) { doc.headerLines.push(line); continue; }
+    const isBullet = BULLET_RE.test(rawLine);
+    const content = line.replace(BULLET_RE, "").trim();
+    const last = cur.blocks[cur.blocks.length - 1];
+
+    if (isBullet && last && last.type === "entry") {
+      last.bullets.push(content);
+    } else if (isBullet) {
+      cur.blocks.push({ type: "entry", head: [], bullets: [content] });
+    } else if (cur.kind === "experience") {
+      // non-bullet line inside experience = role heading; merge consecutive heading lines
+      if (last && last.type === "entry" && last.bullets.length === 0 && last.head.length < 3) {
+        last.head.push(content);
+      } else {
+        cur.blocks.push({ type: "entry", head: [content], bullets: [] });
+      }
+    } else {
+      cur.blocks.push({ type: "text", text: content });
+    }
+  }
+  // No recognizable section headers at all: keep a short contact block and
+  // best-guess the rest as one section so bullets still render and score.
+  if (!doc.sections.length && doc.headerLines.length > 4) {
+    const rest = doc.headerLines.slice(3);
+    const sec = { title: "Resume", kind: "other", blocks: [] };
+    for (const line of rest) {
+      const isBullet = BULLET_RE.test(line);
+      const content = line.replace(BULLET_RE, "").trim();
+      const last = sec.blocks[sec.blocks.length - 1];
+      if (isBullet && last && last.type === "entry") last.bullets.push(content);
+      else if (isBullet) sec.blocks.push({ type: "entry", head: [], bullets: [content] });
+      else sec.blocks.push({ type: "text", text: content });
+    }
+    doc.sections.push(sec);
+    doc.headerLines = doc.headerLines.slice(0, 3);
+    doc.unstructured = true;
+  }
+  return doc;
+}
+
+/* ================= rendering ================= */
+
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+function highlight(text, kwSet) {
+  const ranges = [];
+  // phrase-level matches ("continuous integration" -> cicd) span multiple words
+  for (const [pat, canon] of PHRASE_CANON) {
+    if (!kwSet.has(canon)) continue;
+    for (const m of text.matchAll(new RegExp(pat.source, "gi"))) {
+      if (m[0]) ranges.push([m.index, m.index + m[0].length]);
+    }
+  }
+  for (const m of text.matchAll(/[A-Za-z0-9+#./-]+/g)) {
+    for (const c of concepts(m[0])) {
+      if (kwSet.has(c)) { ranges.push([m.index, m.index + m[0].length]); break; }
+    }
+  }
+  if (!ranges.length) return esc(text);
+  ranges.sort((a, b) => a[0] - b[0]);
+  const merged = [ranges[0]];
+  for (const [s, e] of ranges.slice(1)) {
+    const last = merged[merged.length - 1];
+    if (s <= last[1]) last[1] = Math.max(last[1], e);
+    else merged.push([s, e]);
+  }
+  let out = "", pos = 0;
+  for (const [s, e] of merged) {
+    out += esc(text.slice(pos, s)) + "<mark>" + esc(text.slice(s, e)) + "</mark>";
+    pos = e;
+  }
+  return out + esc(text.slice(pos));
+}
+
+/* canon token -> the posting's actual wording, so chips never show internal
+   forms like "cicd"/"dotnet" the posting doesn't literally contain */
+function surfaceMap(jdText) {
+  const map = new Map();
+  const norm = normalize(jdText);
+  for (const [pat, canon] of PHRASE_CANON) {
+    const m = norm.match(new RegExp(pat.source, "i"));
+    if (m && m[0] && !map.has(canon)) map.set(canon, m[0].trim());
+  }
+  for (const tok of tokenize(jdText)) {
+    const c = canonToken(tok);
+    if (!map.has(c)) map.set(c, tok);
+  }
+  return map;
+}
+
+function renderSheet(doc, kwSet) {
+  const parts = [];
+  if (doc.headerLines.length) {
+    parts.push('<h2 class="name">' + esc(doc.headerLines[0]) + "</h2>");
+    for (const l of doc.headerLines.slice(1))
+      parts.push('<div class="contact">' + esc(l) + "</div>");
+  }
+  for (const sec of doc.sections) {
+    parts.push("<h3>" + esc(sec.title) + "</h3>");
+    for (const block of sec.blocks) {
+      if (block.type === "text") {
+        parts.push("<p>" + highlight(block.text, kwSet) + "</p>");
+        continue;
+      }
+      if (block.head.length) {
+        parts.push('<div class="rolehead">' + highlight(block.head[0], kwSet) + "</div>");
+        for (const h of block.head.slice(1))
+          parts.push('<div class="rolesub">' + esc(h) + "</div>");
+      }
+      if (block.bullets.length) {
+        const ranked = block.bullets
+          .map((b, i) => ({ b, i, s: scoreLine(b, kwSet) }))
+          .sort((x, y) => y.s - x.s || x.i - y.i);
+        parts.push("<ul>");
+        for (const { b } of ranked) {
+          parts.push('<li><span class="bullet-toggle" contenteditable="false" role="button" tabindex="0" title="Include / drop this bullet">—</span>' +
+                     highlight(b, kwSet) + "</li>");
+        }
+        parts.push("</ul>");
+      }
+    }
+  }
+  return parts.join("\n");
+}
+
+function chipList(el, words, cls, freq, surface) {
+  el.innerHTML = "";
+  for (const w of words) {
+    const span = document.createElement("span");
+    span.className = "chip " + cls;
+    const label = (surface && surface.get(w)) || w;
+    span.textContent = freq && freq.get(w) > 2 ? label + " ×" + freq.get(w) : label;
+    el.appendChild(span);
+  }
+  if (!words.length) {
+    const span = document.createElement("span");
+    span.className = "hint";
+    span.textContent = cls === "miss" ? "Nothing missing — great coverage." : "No overlap found yet.";
+    el.appendChild(span);
+  }
+}
+
+/* Wording alignments: concept covered, but resume never uses the posting's surface form */
+function suggestions(resumeText, jdText, covered) {
+  const out = [];
+  const resTokens = new Set(tokenize(resumeText));
+  const jdTokens = new Set(tokenize(jdText));
+  const surface = new Map(); // canon -> first raw jd token with that canon
+  for (const tok of jdTokens) {
+    const c = canonToken(tok);
+    if (!surface.has(c)) surface.set(c, tok);
+  }
+  for (const c of covered) {
+    const jdSurface = surface.get(c);
+    if (!jdSurface || resTokens.has(jdSurface)) continue;
+    let resSurface = null;
+    for (const tok of resTokens) if (canonToken(tok) === c) { resSurface = tok; break; }
+    if (resSurface && resSurface !== jdSurface) out.push([resSurface, jdSurface]);
+  }
+  return out.slice(0, 8);
+}
+
+/* ================= wiring ================= */
+
+let sheetDirty = false;
+
+function run() {
+  const resumeText = $("resume-in").value.trim();
+  const jdText = $("jd-in").value.trim();
+  if (!resumeText || !jdText) {
+    $("status").textContent = "Paste both your resume and the job posting first.";
+    return;
+  }
+  if (sheetDirty && !confirm("Re-tailoring rebuilds the sheet — your edits and dropped bullets will be lost. Continue?")) {
+    return;
+  }
+  $("status").textContent = "";
+
+  const doc = parseResume(resumeText);
+  if (!doc.sections.length && !doc.headerLines.length) {
+    $("status").textContent = "Couldn't read that resume text — is it plain text?";
+    return;
+  }
+
+  const resConcepts = concepts(resumeText);
+  const { match, covered, missing, kw, freq } = coverage(jdText, resConcepts);
+  const kwSet = new Set(kw);
+
+  $("sheet").innerHTML = renderSheet(doc, kwSet);
+  $("score-num").textContent = match;
+  $("score-verdict").textContent =
+    match >= 60 ? "Strong overlap — polish the wording and ship it."
+    : match >= 45 ? "Moderate — check the red-pen list for real experience you left out."
+    : "Weak so far — this posting may want different emphasis, or a different resume.";
+  const surface = surfaceMap(jdText);
+  chipList($("hits"), covered, "hit", freq, surface);
+  chipList($("misses"), missing, "miss", freq, surface);
+  sheetDirty = false;
+  if (doc.unstructured) {
+    $("status").textContent = "No section headers found — showing a best-guess layout. Section titles like EXPERIENCE or SKILLS on their own lines give a cleaner result.";
+  }
+
+  const suggs = suggestions(resumeText, jdText, covered);
+  $("suggs").innerHTML = suggs.length
+    ? suggs.map(([a, b]) => '<div class="sugg"><code>' + esc(a) + '</code><span class="to">→ posting says</span><code>' + esc(b) + "</code></div>").join("")
+    : '<p class="hint">Your wording already matches the posting’s.</p>';
+
+  $("results").classList.add("on");
+  $("results").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+}
+
+$("go").addEventListener("click", run);
+
+$("sheet").addEventListener("input", () => { sheetDirty = true; });
+$("sheet").addEventListener("click", e => {
+  if (e.target.classList.contains("bullet-toggle")) {
+    e.target.closest("li").classList.toggle("off");
+    sheetDirty = true;
+  }
+});
+$("sheet").addEventListener("keydown", e => {
+  if (e.target.classList.contains("bullet-toggle") && (e.key === "Enter" || e.key === " ")) {
+    e.preventDefault();
+    e.target.closest("li").classList.toggle("off");
+  }
+});
+
+$("print").addEventListener("click", () => window.print());
+
+$("copy").addEventListener("click", async () => {
+  const clone = $("sheet").cloneNode(true);
+  clone.querySelectorAll("li.off, .bullet-toggle").forEach(n => n.remove());
+  clone.querySelectorAll("li").forEach(li => { li.textContent = "- " + li.textContent.trim(); });
+  clone.querySelectorAll("h3").forEach(h => { h.textContent = "\n" + h.textContent.toUpperCase(); });
+  const text = clone.innerText.replace(/\n{3,}/g, "\n\n").trim();
+  try {
+    await navigator.clipboard.writeText(text);
+    $("status").textContent = "Copied.";
+  } catch {
+    $("status").textContent = "Copy blocked by the browser — select the sheet text instead.";
+  }
+});
+
+$("load-example").addEventListener("click", () => {
+  $("resume-in").value = `Jordan Reyes
+Toronto, ON · jordan.reyes@example.com · linkedin.com/in/jordanreyes
+
+SUMMARY
+Support analyst moving into cloud operations, with three years of hands-on
+troubleshooting, scripting, and customer-facing incident work.
+
+EXPERIENCE
+IT Support Analyst — Northbridge Retail Group
+2022 – Present
+- Resolved 30+ tickets weekly across Windows, macOS, and mobile devices
+- Wrote PowerShell scripts to automate onboarding, cutting setup time in half
+- Maintained k8s test cluster for the internal tools team
+- Monitored backup jobs and restored failed snapshots
+- Trained 4 junior technicians on the ticketing workflow
+
+Help Desk Technician — Campus IT Services
+2020 – 2022
+- First point of contact for 200+ students and staff
+- Documented recurring fixes in the internal knowledge base
+
+SKILLS
+PowerShell, Bash, Windows Server, Active Directory, k8s, VMware, Jira
+
+EDUCATION
+Diploma, Computer Systems Technology — Seneca College, 2020`;
+  $("jd-in").value = `Cloud Operations Specialist
+
+We're hiring a Cloud Operations Specialist to keep our Kubernetes-based
+platform healthy. You will monitor production systems, respond to incidents,
+automate routine operations with scripts and CI/CD pipelines, and improve our
+monitoring dashboards. Experience with Kubernetes, PowerShell or Bash
+scripting, incident response, and cloud infrastructure (AWS or Azure) is
+required. You'll join the on-call rotation and drive root cause analysis for
+production incidents, and help with automation of deployment pipelines.`;
+  $("status").textContent = "Example loaded — press “Tailor my resume”.";
+});
+</script>
+
+</body>
+</html>
